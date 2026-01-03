@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Layout } from './components/Layout';
+import { clsx } from 'clsx';
 import { Dashboard } from './components/Dashboard';
 import { TransactionList } from './components/TransactionList';
 import { FilterBar } from './components/inputs/FilterBar';
 import { ExpenseProvider } from './context/ExpenseContext';
-import { LayoutDashboard, List, PieChart } from 'lucide-react';
+import { LayoutDashboard, List, PieChart, Menu, X } from 'lucide-react';
 import { BudgetManager } from './components/BudgetManager';
+import './styles/styles.css';
 
-// Sidebar items definition moved here or passed to Layout
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'transactions', label: 'Transactions', icon: List },
@@ -16,6 +16,10 @@ const NAV_ITEMS = [
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const closeSidebar = () => setIsSidebarOpen(false);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -37,55 +41,31 @@ function AppContent() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-app)' }}>
-      {/* Sidebar - Inline for simplicity due to state sharing or pass props */}
-      <aside style={{
-        width: '260px',
-        backgroundColor: 'var(--bg-card)',
-        borderRight: '1px solid var(--border)',
-        padding: '1.5rem',
-        position: 'fixed',
-        height: '100vh',
-        top: 0,
-        left: 0,
-        zIndex: 10
-      }}>
-        <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            backgroundColor: 'var(--primary)',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
-          }}>
+    <div className="app-container">
+      {/* Mobile Overlay */}
+      <div
+        className={clsx("mobile-overlay", isSidebarOpen && "visible")}
+        onClick={closeSidebar}
+      />
+
+      {/* Sidebar */}
+      <aside className={clsx("sidebar", isSidebarOpen && "open")}>
+        <div className="sidebar-header">
+          <div className="logo-box">
             <PieChart size={20} />
           </div>
-          <h1 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-main)' }}>Expensify</h1>
+          <h1 className="logo-text">Expensify</h1>
         </div>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <nav className="nav-menu">
           {NAV_ITEMS.map(item => (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem 1rem',
-                width: '100%',
-                border: 'none',
-                background: activeTab === item.id ? '#eff6ff' : 'transparent',
-                color: activeTab === item.id ? '#2563eb' : '#64748b',
-                borderRadius: '0.5rem',
-                textAlign: 'left',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
+              onClick={() => {
+                setActiveTab(item.id);
+                closeSidebar(); // Close on mobile click
               }}
+              className={clsx("nav-item", activeTab === item.id && "active")}
             >
               <item.icon size={20} />
               <span>{item.label}</span>
@@ -94,15 +74,15 @@ function AppContent() {
         </nav>
       </aside>
 
-      <main style={{
-        marginLeft: '260px',
-        flex: 1,
-        padding: '2rem',
-        maxWidth: '1200px',
-        width: 'calc(100% - 260px)'
-      }}>
+      {/* Main Content */}
+      <main className="main-content">
         {renderContent()}
       </main>
+
+      {/* Mobile Toggle FAB */}
+      <button className="mobile-toggle" onClick={toggleSidebar}>
+        {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
     </div>
   );
 }
